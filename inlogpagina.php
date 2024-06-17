@@ -1,5 +1,11 @@
 <?php
     require('config.php');
+    session_start();
+    if(isset($_SESSION['gebruiker_id'])){
+        session_unset();
+    }
+    
+    //gebruiken laten inloggen
     if (isset($_POST['Login'])) {
         $email         = $_POST['email'];
         $password      = $_POST['password'];
@@ -11,8 +17,9 @@
         if ($result->num_rows > 0) {    
             while ($row = $result->fetch_assoc()) {
                 if (password_verify($password, $row['wachtwoord'])) { 
+                    $_SESSION['gebruiker_id'] = $row['id'];
                     header("Location: index.php");
-                    exit(); 
+                    exit();
                 } else {
                     echo "Je wachtwoord en of email is onjuist";
                 }

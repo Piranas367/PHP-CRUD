@@ -1,15 +1,21 @@
 <?php
 include 'config.php';
 
+session_start();
+if(!isset($_SESSION['gebruiker_id'])){
+    header("Location: inlogpagina.php");
+}
+// gegevens gebruiker veranderen
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_changes'])) {
-    $name           = $_POST['name'];
-    $achternaam     = $_POST['achternaam'];
-    $email          = $_POST['email'];
-    $password       = password_hash($_POST['password'], PASSWORD_BCRYPT);
+    $name       = $_POST['name'];
+    $achternaam = $_POST['achternaam'];
+    $email      = $_POST['email'];
+    $password   = password_hash($_POST['password'], PASSWORD_BCRYPT);
+    $ID         = $_POST['ID']; 
 
-    $sql        = "UPDATE Gebruiker SET naam=?, achternaam=?, email=?, wachtwoord=? WHERE email=?";
-    $stmt       = $conn->prepare($sql);
-    $stmt->bind_param("sssss", $name, $achternaam, $email, $password, $email);
+    $sql = "UPDATE Gebruiker SET naam=?, achternaam=?, email=?, wachtwoord=? WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssssi", $name, $achternaam, $email, $password, $ID);
 
     if ($stmt->execute()) {
         echo "Gegevens veranderd!";
@@ -18,16 +24,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_changes'])) {
     }
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verwijder'])) {
-    $name           = $_POST['name'];
-    $achternaam     = $_POST['achternaam'];
-    $email          = $_POST['email'];
-    $password       = password_hash($_POST['password'], PASSWORD_DEAFULT);
 
-    $sql            = "DELETE FROM Gebruiker WHERE email= ?";
-    $stmt           = $conn->prepare($sql);
-    $stmt->bind_param("ssss", $name, $achternaam, $email, $password); 
-   
+//gegevens gebruiker verwijderen
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verwijderen'])) {
+    $email = $_POST['VerwijderEmail'];
+
+    $sql = "DELETE FROM Gebruiker WHERE email = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $email);
+
     if ($stmt->execute()) {
         echo "Account verwijderd!";
     } else {
@@ -35,11 +40,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verwijder'])) {
     }
 }
 
-$sql = "SELECT * FROM Gebruiker";
+$sql = "SELECT * FROM Gebruiker WHERE id = ?";
 $stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $_SESSION['gebruiker_id']);
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -57,10 +64,12 @@ $result = $stmt->get_result();
             document.getElementById('edit_button').style.display = 'none';
         }
 
-         function verwijderAccount() {
-                if (confirm("Weet je zeker dat je je account wilt verwijderen?")) {
-                    document.getElementById('verwijderen').click();
-            }};
+        function VerwijderKnop(email) {
+            if (confirm('Weet je zeker dat je dit account wilt verwijderen?')) {
+                document.getElementById('VerwijderEmail').value = email;
+                document.getElementById('verwijderen').click();
+            }
+        }
     </script>
 </head>
 <header>
@@ -68,6 +77,7 @@ $result = $stmt->get_result();
         <ul>
             <li><a href="instellingen.php">instellingen</a></li>
             <li><a href="index.php">homepagina</a></li>
+            <li><a href="inlogpagina.php">LogIn Pagina</a></li>
         </ul>
     </nav>
 </header>
@@ -86,7 +96,7 @@ if ($result->num_rows > 0) {
         echo '    <form action="instellingen.php" method="post">' . "\n";
         echo '        <div class="form-group">' . "\n";
         echo '            <label for="name">Voornaam</label>' . "\n";
-        echo '            <input type="text" id="name" name="name" value="'.$row['naam'].'" disabled>' . "\n";
+        echo '            <input type="text" id="name" name="name" value="'.$row['naam'].'" disabled>' . "\n"; 
         echo '        </div>' . "\n";
         echo '        <div class="form-group">' . "\n";
         echo '            <label for="achternaam">Achternaam</label>' . "\n";
@@ -100,10 +110,12 @@ if ($result->num_rows > 0) {
         echo '            <label for="password">Wachtwoord</label>' . "\n";
         echo '            <input type="password" id="password" name="password" value="" disabled>' . "\n";
         echo '        </div>' . "\n";
-        echo '          <input type="button" id="edit_button" value="Aanpassen" onclick="AanpasKnop()">' . "\n";
-        echo '          <input type="submit" id="submit_changes" name="submit_changes" value="Toepassen" style="display:none">' . "\n";
-        echo '              <input type="button" id="verwijder"  value="verwijder" onclick="verwijderAccount()">' . "\n";
-        echo '              <input type="submit" id="verwijderen" name="verwijderen" value="verwijderen" style="display:none">' . "\n";
+        echo '        <input type="hidden" id="ID" name="ID" value="'.$row['id'].'">' . "\n"; 
+        echo '        <input type="button" id="edit_button" value="Aanpassen" onclick="AanpasKnop()">' . "\n";
+        echo '        <input type="submit" id="submit_changes" name="submit_changes" value="Toepassen" style="display:none">' . "\n";
+        echo '        <input type="button" id="verwijder" value="Verwijder" onclick="VerwijderKnop(\'' . $row['email'] . '\')">' . "\n";
+        echo '        <input type="hidden" id="VerwijderEmail" name="VerwijderEmail" value="">' . "\n";
+        echo '        <input type="submit" id="verwijderen" name="verwijderen" value="verwijderen" style="display:none">' . "\n";
         echo '    </form>' . "\n";
         echo '</div>' . "\n";
     }
@@ -112,11 +124,3 @@ if ($result->num_rows > 0) {
 </div>
 </body>
 </html>
-
-
-
-
-
-
-
-

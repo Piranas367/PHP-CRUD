@@ -1,5 +1,6 @@
 <?php
     require_once('config.php');
+    //gebruiker toevoegen in database
     if (isset($_POST['create'])){
         $name           = $_POST['name'];
         $achternaam     = $_POST['achternaam'];
@@ -27,7 +28,7 @@
 <body>
     <div>
     </div>
-    <form action="inlogpagina.php" method="post">
+    <form action="aanmeldingsformulier.php" method="post">
         <div class="login-container">
             <h1 class="h1">Meld je hier aan</h1>
             <div class="input-group">

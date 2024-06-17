@@ -1,3 +1,9 @@
+<?php
+session_start();
+if(!isset($_SESSION['gebruiker_id'])){
+    header("Location: inlogpagina.php");
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -12,12 +18,11 @@
         <ul>
           <li><a href="instellingen.php">instellingen</a></li>
           <li><a href="index.php">homepagina</a></li>
+          <li><a href="inlogpagina.php">LogIn Pagina</a></li>
         </ul>
       </nav>
     </header>
-    <?php
-  echo " Welkom op deze pagina"; 
-  ?>
+    <H1>Tools for ever digitale distrubutie</H1>
   </body>
 </html>
 
